@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZukkoLab — Bolalar va Yoshlar Uchun Aqlni Charxlash Platformasi</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.35s ease-out forwards;
+    }
+
+    @keyframes pulseScale {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+
+    .animate-pulse-scale {
+      animation: pulseScale 1.2s infinite ease-in-out;
+    }
+
+    /* Maxsus scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-sky-50 via-white to-indigo-50 text-slate-800 antialiased">
+
+  <!-- ===================================================================== -->
+  <!-- 1. PROFIL VA YOSH TANLASH OYNASI (ONBOARDING)                         -->
+  <!-- ===================================================================== -->
+  <div id="onboarding-screen" class="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-amber-50 flex items-center justify-center p-4">
+    <div class="max-w-3xl w-full bg-white/95 backdrop-blur rounded-3xl shadow-xl border border-white p-6 sm:p-10 animate-fade-in">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm mb-3">
+          ✨ ZukkoLab — Aqlni Charxlash Platformasi
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight mb-2">
+          Xush kelibsiz! Yoshingizni tanlang 🧠
+        </h1>
+        <p class="text-slate-600">
+          O‘yinlarning qiyinlik darajasi yoshingizga moslab avtomatik sozlanadi
+        </p>
+      </div>
+
+      <form id="profile-form" class="space-y-7">
+        <!-- Yosh toifalari -->
+        <div>
+          <label class="block text-sm font-extrabold text-slate-700 mb-3">
+            1. Yosh toifasini tanlang:
+          </label>
+          <div id="age-groups-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
+
+          <!-- Aniq yosh kiritish yoki 20+ tugmasi -->
+          <div class="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <span class="text-sm font-bold text-slate-700 whitespace-nowrap">Aniq yoshingiz:</span>
+              <input
+                type="number"
+                id="custom-age-input"
+                min="2"
+                max="120"
+                placeholder="Masalan: 24"
+                class="w-28 px-3 py-2 rounded-xl border border-slate-300 bg-white font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <button
+              type="button"
+              id="btn-over-20"
+              class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-sm font-bold transition cursor-pointer"
+            >
+              20 yoshdan kattaman (16–20+ ga o‘tish) ⚡
+            </button>
+          </div>
+          <p id="age-notice" class="hidden mt-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-2 rounded-xl"></p>
+        </div>
+
+        <!-- Ism va Avatar tanlash -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="user-name-input" class="block text-sm font-extrabold text-slate-700 mb-2">
+              2. Ismingiz (ixtiyoriy):
+            </label>
+            <input
+              type="text"
+              id="user-name-input"
+              maxlength="20"
+              placeholder="Ismingizni yozing..."
+              class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-indigo-500 focus:outline-none font-bold text-slate-800"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-extrabold text-slate-700 mb-2">
+              3. Avatar tanlang:
+            </label>
+            <div id="avatars-container" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white font-black text-lg shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          O‘yinlarni Boshlash ➡️
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 2. ASOSIY PLATFORMA (HEADER + DASHBOARD + O'YIN MAYDONI)              -->
+  <!-- ===================================================================== -->
+  <div id="main-app" class="hidden min-h-screen pb-12">
+    <!-- Yuqori navigatsiya paneli -->
+    <header class="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-slate-200/70">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <!-- Logotip -->
+        <button id="btn-logo-home" class="flex items-center gap-2.5 text-left group cursor-pointer">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
+            🧠
+          </div>
+          <div>
+            <span class="font-black text-xl tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              ZukkoLab
+            </span>
+            <span class="hidden sm:block text-[11px] font-bold text-slate-400 -mt-1">
+              Aqlni charxlash platformasi
+            </span>
+          </div>
+        </button>
+
+        <!-- O'ng panel: Rekord, Profil, Ovoz, Bosh menyu -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="hidden md:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl text-amber-800 font-extrabold text-sm">
+            🏆 <span>Jami: <span id="header-total-score">0</span> ball</span>
+          </div>
+
+          <button
+            id="btn-edit-profile"
+            title="Yosh toifasi va profilni o‘zgartirish"
+            class="flex items-center gap-2 bg-slate-100 hover:bg-indigo-50 border border-slate-200 px-3 py-1.5 rounded-2xl transition cursor-pointer"
+          >
+            <span id="header-avatar" class="text-xl">🦊</span>
+            <div class="text-left">
+              <div id="header-name" class="text-xs sm:text-sm font-extrabold text-slate-800 leading-tight">O‘yinchi</div>
+              <div id="header-age-label" class="text-[11px] font-bold text-indigo-600">5–9 yosh 🚀</div>
+            </div>
+          </button>
+
+          <button
+            id="btn-toggle-sound"
+            aria-label="Ovozni yoqish/o‘chirish"
+            class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer text-lg"
+          >
+            🔊
+          </button>
+
+          <button
+            id="btn-nav-home"
+            class="hidden p-2.5 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-700 transition cursor-pointer text-lg"
+            title="Bosh menyu"
+          >
+            🏠
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Asosiy kontent -->
+    <main class="max-w-6xl mx-auto px-4 pt-6 sm:pt-8">
+      <!-- DASHBOARD KO'RINISHI -->
+      <div id="dashboard-view" class="animate-fade-in">
+        <!-- Salomlashuv banneri -->
+        <div id="welcome-banner" class="rounded-3xl bg-gradient-to-r from-amber-400 to-orange-500 p-6 sm:p-8 text-white shadow-lg mb-8 relative overflow-hidden">
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold mb-3">
+                <span id="banner-age-badge">🚀 5–9 yosh — Boshlang‘ich sinf</span>
+              </div>
+              <h1 id="banner-greeting" class="text-2xl sm:text-4xl font-black mb-2">
+                Salom, Zukko O‘yinchi! 🦊
+              </h1>
+              <p class="text-white/90 max-w-xl text-sm sm:text-base font-medium">
+                Bugun miyangizni qaysi mashq bilan charxlaymiz? Quyidagi 6 ta mantiqiy o‘yindan birini tanlang!
+              </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
+              <div class="bg-white/20 backdrop-blur-md rounded-2xl px-5 py-3 text-center">
+                <div class="text-xs uppercase tracking-wider font-bold text-white/80">Umumiy rekord</div>
+                <div class="text-2xl sm:text-3xl font-black"><span id="banner-total-score">0</span> ball</div>
+              </div>
+              <button
+                id="btn-banner-change-age"
+                class="px-4 py-2 rounded-xl bg-white text-slate-800 font-bold text-sm shadow hover:bg-slate-50 transition cursor-pointer"
+              >
+                Yosh toifasini o‘zgartirish
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 ta o'yin kartochkalari panjarasi -->
+        <div id="games-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"></div>
+      </div>
+
+      <!-- FAOL O'YIN KONTEYNERI -->
+      <div id="game-container" class="hidden animate-fade-in"></div>
+    </main>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 3. JAVASCRIPT: OVOZ, MA'LUMOTLAR BAZASI VA 6 TA O'YIN MEXANIKASI       -->
+  <!-- ===================================================================== -->
+  <script>
+    // -----------------------------------------------------------------------
+    // A. WEB AUDIO API - OVOZ EFFEKTLARI GENERATORI
+    // -----------------------------------------------------------------------
+    class SoundEffects {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+      }
+
+      playTone(freq, type = 'sine', duration = 0.15, vol = 0.15, delay = 0) {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          if (this.ctx.state === 'suspended') this.ctx.resume();
+
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+
+          gain.gain.setValueAtTime(vol, this.ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + delay);
+          osc.stop(this.ctx.currentTime + delay + duration);
+        } catch (e) {}
+      }
+
+      click() { this.playTone(520, 'sine', 0.08, 0.1); }
+      correct() {
+        this.playTone(523.25, 'triangle', 0.12, 0.15, 0);
+        this.playTone(659.25, 'triangle', 0.18, 0.15, 0.09);
+      }
+      wrong() {
+        this.playTone(220, 'sawtooth', 0.18, 0.12, 0);
+        this.playTone(185, 'sawtooth', 0.22, 0.12, 0.1);
+      }
+      win() {
+        [523.25, 659.25, 783.99, 1046.50].forEach((n, i) => {
+          this.playTone(n, 'triangle', 0.2, 0.16, i * 0.1);
+        });
+      }
+      simonNote(index) {
+        const freqs = [261.63, 329.63, 392.00, 493.88, 523.25, 587.33, 659.25, 783.99, 880.00];
+        this.playTone(freqs[index % freqs.length], 'sine', 0.25, 0.15, 0);
+      }
+    }
+
+    const sfx = new SoundEffects();
+
+    // -----------------------------------------------------------------------
+    // B. KONFIGURATSIYA VA SAVOLLAR BAZASI
+    // -----------------------------------------------------------------------
+    const AGE_GROUPS = [
+      {
+        id: '3-5',
+        label: '3–5 yosh',
+        title: 'Kichkintoylar',
+        emoji: '🧸',
+        desc: 'Ranglar, shakllar, hayvonlar va oddiy sanash',
+        gradient: 'from-pink-400 to-rose-500'
+      },
+      {
+        id: '5-9',
+        label: '5–9 yosh',
+        title: 'Boshlang‘ich sinf',
+        emoji: '🚀',
+        desc: 'Tezkor qo‘shish, mantiqiy qatorlar va diqqat',
+        gradient: 'from-amber-400 to-orange-500'
+      },
+      {
+        id: '10-15',
+        label: '10–15 yosh',
+        title: 'O‘smirlar',
+        emoji: '🧠',
+        desc: 'Ko‘paytirish, Stroop testi, murakkab topishmoqlar',
+        gradient: 'from-sky-400 to-indigo-500'
+      },
+      {
+        id: '16-20',
+        label: '16–20+ yosh',
+        title: 'Yoshlar va kattalar',
+        emoji: '⚡',
+        desc: 'Tenglamalar, Fibonachchi, yuqori tezlik va xotira',
+        gradient: 'from-emerald-400 to-teal-600'
+      }
+    ];
+
+    const AVATARS = ['🦊', '🐼', '🦁', '🦄', '🤖', '👨‍🚀', '🚀', '🦉', '🐯', '🐬', '🦋', '🦖'];
+
+    const GAMES_LIST = [
+      { id: 'memory', title: 'Xotira Kartochkalari', subtitle: 'Bir xil juftliklarni eslab qoling va toping', emoji: '🃏', color: 'from-violet-500 to-purple-600', skill: 'Vizual xotira' },
+      { id: 'math', title: 'Tezkor Matematika', subtitle: 'Vaqt tugamasidan misollarni to‘g‘ri yeching', emoji: '🔢', color: 'from-blue-500 to-cyan-600', skill: 'Hisoblash tezligi' },
+      { id: 'pattern', title: 'Ketma-ketlikni Top', subtitle: 'Mantiqiy qonuniyatni aniqlab davom ettiring', emoji: '🧩', color: 'from-amber-500 to-orange-600', skill: 'Mantiqiy tahlil' },
+      { id: 'attention', title: 'Diqqat va Stroop', subtitle: 'Farqli belgini yoki haqiqiy rangni tez toping', emoji: '👁️', color: 'from-rose-500 to-pink-600', skill: 'Diqqatni jamlash' },
+      { id: 'riddles', title: 'Mantiqiy Topishmoqlar', subtitle: 'Zukkolik talab qiluvchi savollar va boshqotirmalar', emoji: '💡', color: 'from-emerald-500 to-green-600', skill: 'Muammo yechish' },
+      { id: 'simon', title: 'Eslab Qol va Takrorla', subtitle: 'Yongan katakchalar ketma-ketligini qaytaring', emoji: '✨', color: 'from-fuchsia-500 to-indigo-600', skill: 'Ishchi xotira' }
+    ];
+
+    const RIDDLES_DB = {
+      '3-5': [
+        { q: 'Uning uzun quloqlari bor, sabzini juda yaxshi ko‘radi va sakrab yuradi. U kim? 🥕', options: ['Quyoncha 🐰', 'Ayiq 🐻', 'Baliq 🐟', 'Xo‘roz 🐓'], answer: 'Quyoncha 🐰', explanation: 'Quyonchaning quloqlari uzun bo‘ladi va u sabzi yeyishni yoqtiradi!' },
+        { q: 'Qishda oppoq, yozda yashil, kuzda esa sariq barglarini to‘kadi. Bu nima? 🌳', options: ['Daraxt 🌳', 'Mashina 🚗', 'Koptok ⚽', 'Uy 🏠'], answer: 'Daraxt 🌳', explanation: 'Daraxtlar fasllarga qarab barglarining rangini o‘zgartiradi.' },
+        { q: 'Kechasi osmonda porlaydi, kunduzi ko‘rinmaydi. U nima? ✨', options: ['Yulduzlar ⭐', 'Quyosh ☀️', 'Bulut ☁️', 'Kamalak 🌈'], answer: 'Yulduzlar ⭐', explanation: 'Yulduzlar va Oy tunda qorong‘u osmonda yarqirab ko‘rinadi.' },
+        { q: 'Suvda suzadi, qanoti yo‘q, gapirmaydi. U nima? 🌊', options: ['Baliq 🐠', 'Mushuk 🐱', 'Quyon 🐰', 'Fil 🐘'], answer: 'Baliq 🐠', explanation: 'Baliqlar faqat suvda yashaydi va suzgichlari yordamida suzadi.' },
+        { q: 'Yomg‘ir yog‘gandan keyin quyosh chiqsa, osmonda 7 rangli nima paydo bo‘ladi? 🌦️', options: ['Kamalak 🌈', 'Qor ❄️', 'Tuman 🌫️', 'Yulduz 🌟'], answer: 'Kamalak 🌈', explanation: 'Quyosh nuri yomg‘ir tomchilaridan o‘tganda 7 rangli kamalak hosil bo‘ladi.' },
+        { q: 'Usti yashil, ichi qizil, urug‘lari qora. Yozda mazali meva! 🍉', options: ['Tarvuz 🍉', 'Banan 🍌', 'Olma 🍎', 'Limon 🍋'], answer: 'Tarvuz 🍉', explanation: 'Tarvuzning po‘stlog‘i yashil, ichi esa shirin va qizil bo‘ladi.' }
+      ],
+      '5-9': [
+        { q: 'Daraxt shoxida 5 ta qush o‘tirgan edi. Ovchi miltiq otdi, 1 tasi yerga tushdi. Shoxda nechta qush qoldi?', options: ['0 ta (hammasi uchib ketdi)', '4 ta qush', '5 ta qush', '1 ta qush'], answer: '0 ta (hammasi uchib ketdi)', explanation: 'Miltiq ovozidan qo‘rqib, qolgan barcha qushlar uchib ketadi!' },
+        { q: 'Qaysi oyda 28 kun bor?', options: ['Barcha oylarda', 'Faqat fevralda', 'Hech qaysi oyda', 'Faqat yanvarda'], answer: 'Barcha oylarda', explanation: 'Har bir oyda kamida 28 kun mavjud (ba’zilarida 30 yoki 31 kun).' },
+        { q: '1 kg paxta og‘irmi yoki 1 kg temir og‘irmi?', options: ['Ikkalasi teng (1 kg)', 'Temir og‘ir', 'Paxta og‘ir', 'Bilmayman'], answer: 'Ikkalasi teng (1 kg)', explanation: 'Ikkalasining ham og‘irligi 1 kilogrammga teng!' },
+        { q: 'Anvarning 3 ta opasi bor. Har bir opasining 1 tadan ukasi bor. Oilada nechta bola bor?', options: ['4 ta bola', '6 ta bola', '7 ta bola', '3 ta bola'], answer: '4 ta bola', explanation: '3 ta opa va ularning barchasi uchun bitta uka — bu Anvarning o‘zi! Jami 4 ta.' },
+        { q: 'Qo‘lsiz, oyoqsiz eshik ochadi. U nima?', options: ['Shamol 💨', 'Kalit 🔑', 'Mushuk 🐈', 'Soyabon ☂️'], answer: 'Shamol 💨', explanation: 'Kuchli shamol ochiq turgan eshik va derazalarni harakatga keltiradi.' },
+        { q: 'Qaysi idishdan ovqat yeb bo‘lmaydi?', options: ['Bo‘sh idishdan', 'Katta idishdan', 'Chuqur idishdan', 'Sopol idishdan'], answer: 'Bo‘sh idishdan', explanation: 'Ichida hech narsa bo‘lmagan (bo‘sh) idishdan ovqat yeb bo‘lmaydi.' }
+      ],
+      '10-15': [
+        { q: 'Yugurish musobaqasida sen 2-o‘rinda ketayotgan sportchini quvib o‘tding. Hozir nechanchi o‘rindasan?', options: ['2-o‘rinda', '1-o‘rinda', '3-o‘rinda', 'Oxirgi o‘rinda'], answer: '2-o‘rinda', explanation: 'Sen 2-o‘rindagi odamning o‘rnini egallading, 1-o‘rindagi hali oldinda!' },
+        { q: 'Bir uyda 4 ta burchak bor. Har bir burchakda 1 tadan mushuk o‘tiribdi. Har bir mushukning ro‘parasida 3 tadan mushuk bor. Uyda nechta mushuk bor?', options: ['4 ta mushuk', '12 ta mushuk', '16 ta mushuk', '8 ta mushuk'], answer: '4 ta mushuk', explanation: 'Har bir burchakdagi mushuk qolgan 3 burchakdagi mushuklarni ko‘rib turadi. Jami 4 ta.' },
+        { q: 'U senga tegishli, lekin undan sendan ko‘ra boshqalar ko‘proq foydalanadi. Bu nima?', options: ['Sening isming', 'Sening telefoning', 'Sening puling', 'Sening kitobing'], answer: 'Sening isming', explanation: 'Odamlar seni chaqirish uchun ismingni o‘zingdan ko‘ra ko‘proq aytishadi.' },
+        { q: 'Ikki ota va ikki o‘g‘il ovga chiqib, 3 ta quyon tutishdi. Har biri 1 tadan quyon oldi. Bu qanday mumkin?', options: ['Ular 3 kishi: bobo, ota va o‘g‘il', '1 ta quyon bo‘lib berildi', 'Biri ovqatlanmadi', 'Xato hisoblangan'], answer: 'Ular 3 kishi: bobo, ota va o‘g‘il', explanation: 'Bobo va ota — 2 ta ota; ota va nabira — 2 ta o‘g‘il. Jami 3 kishi!' },
+        { q: 'Undan qancha ko‘p olsangiz, u shuncha kattalashib boradi. Bu nima?', options: ['Chuqur (o‘ra)', 'Qarz', 'Bilim', 'Xazina'], answer: 'Chuqur (o‘ra)', explanation: 'Tuproqni qancha ko‘p qazib olsangiz, chuqur shuncha kattalashadi.' },
+        { q: 'Soat 3:15 bo‘lganda soatning soat va daqiqa millari orasidagi burchak nechaga teng?', options: ['7.5 gradus', '0 gradus', '15 gradus', '30 gradus'], answer: '7.5 gradus', explanation: 'Daqiqa mili 3 da turadi, soat mili esa 15 daqiqada 3 dan 1/4 qismga (30° / 4 = 7.5°) siljiydi.' }
+      ],
+      '16-20': [
+        { q: 'Ko‘lda nilufar guli har kuni 2 baravar ko‘payadi. Agar ko‘l 48 kunda to‘liq gul bilan qoplansa, nechanchi kuni ko‘lning yarmi qoplangan edi?', options: ['47-kuni', '24-kuni', '36-kuni', '46-kuni'], answer: '47-kuni', explanation: 'Har kuni 2 baravar ko‘paygani uchun, 48-kuni to‘lishidan 1 kun oldin (47-kuni) yarim bo‘lgan.' },
+        { q: 'Qorong‘u xonada sizda faqat 1 dona gugurt bor. Xonada kerosin lampa, sham va o‘tinli pechka bor. Birinchi nimani yoqasiz?', options: ['Gugurtni', 'Shamni', 'Kerosin lampani', 'Pechkani'], answer: 'Gugurtni', explanation: 'Boshqa narsalarni yoqishdan oldin qo‘lingizdagi gugurt cho‘pini yoqishingiz shart!' },
+        { q: '5 ta mashina 5 daqiqada 5 ta detal ishlab chiqaradi. 100 ta mashina 100 ta detalni necha daqiqada ishlab chiqaradi?', options: ['5 daqiqada', '100 daqiqada', '20 daqiqada', '1 daqiqada'], answer: '5 daqiqada', explanation: 'Har 1 ta mashina 1 ta detalni 5 daqiqada tayyorlaydi. 100 ta mashina parallel ravishda 5 daqiqada 100 ta detal tayyorlaydi.' },
+        { q: 'Aka 4 yoshda edi, ukasi undan 2 baravar kichik edi. Hozir aka 40 yoshda. Ukasi necha yoshda?', options: ['38 yoshda', '20 yoshda', '36 yoshda', '42 yoshda'], answer: '38 yoshda', explanation: 'Oradagi yosh farqi 2 yil. Aka 40 ga kirganda ukasi 40 - 2 = 38 yoshda bo‘ladi.' },
+        { q: 'Qaysi 3 ta musbat sonning yig‘indisi ham, ko‘paytmasi ham bir xil natija beradi?', options: ['1, 2 va 3', '2, 2 va 2', '1, 3 va 4', '0, 1 va 2'], answer: '1, 2 va 3', explanation: '1 + 2 + 3 = 6 va 1 × 2 × 3 = 6.' },
+        { q: 'Bir savatda 5 ta olma bor. 5 ta bolaga 1 tadan olma berildi, lekin savatda 1 ta olma qoldi. Qanday qilib?', options: ['Oxirgi bolaga olma savati bilan berildi', 'Bitta bola olmadi', 'Savatda 6 ta olma bor edi', 'Olma bo‘lib berildi'], answer: 'Oxirgi bolaga olma savati bilan berildi', explanation: '4 ta bolaga olmalar qo‘liga berildi, 5-bolaga esa oxirgi olma savatning ichida berildi.' }
+      ]
+    };
+
+    // -----------------------------------------------------------------------
+    // C. GLOBAL HOLAT (STATE) VA LOCALSTORAGE BOSHQARUVI
+    // -----------------------------------------------------------------------
+    let state = {
+      profile: JSON.parse(localStorage.getItem('zukkolab_profile') || 'null'),
+      scores: JSON.parse(localStorage.getItem('zukkolab_scores') || '{}'),
+      selectedAge: '5-9',
+      selectedAvatar: '🦊',
+      activeGame: null,
+      activeTimer: null
+    };
+
+    if (state.profile) {
+      state.selectedAge = state.profile.ageGroup;
+      state.selectedAvatar = state.profile.avatar;
+    }
+
+    function clearActiveTimer() {
+      if (state.activeTimer) {
+        clearInterval(state.activeTimer);
+        state.activeTimer = null;
+      }
+    }
+
+    function saveScore(gameId, newScore) {
+      if (!state.profile) return;
+      const key = `${state.profile.ageGroup}_${gameId}`;
+      const best = state.scores[key] || 0;
+      if (newScore > best) {
+        state.scores[key] = newScore;
+        localStorage.setItem('zukkolab_scores', JSON.stringify(state.scores));
+      }
+      updateHeaderStats();
+    }
+
+    function getBestScore(gameId) {
+      if (!state.profile) return 0;
+      return state.scores[`${state.profile.ageGroup}_${gameId}`] || 0;
+    }
+
+    function getTotalScore() {
+      return Object.values(state.scores).reduce((sum, val) => sum + val, 0);
+    }
+
+    // -----------------------------------------------------------------------
+    // D. ONBOARDING VA NAVIGATSIYA FUNKSIYALARI
+    // -----------------------------------------------------------------------
+    function renderOnboarding() {
+      const ageContainer = document.getElementById('age-groups-container');
+      ageContainer.innerHTML = AGE_GROUPS.map(group => {
+        const isSelected = state.selectedAge === group.id;
+        return `
+          <button type="button" onclick="selectAgeGroup('${group.id}')"
+            class="p-4 rounded-2xl border-2 text-left transition-all flex items-start gap-3.5 cursor-pointer ${
+              isSelected
+                ? 'border-indigo-500 bg-indigo-50/70 shadow-md scale-[1.01]'
+                : 'border-slate-200 bg-white hover:border-indigo-300'
+            }">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br ${group.gradient} text-2xl flex items-center justify-center text-white shrink-0 shadow-sm">
+              ${group.emoji}
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <span class="font-black text-lg text-slate-800">${group.label}</span>
+                ${isSelected ? '<span class="text-indigo-600 font-black">✓</span>' : ''}
+              </div>
+              <div class="font-bold text-sm text-indigo-700">${group.title}</div>
+              <p class="text-xs text-slate-500 mt-0.5">${group.desc}</p>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      const avatarsContainer = document.getElementById('avatars-container');
+      avatarsContainer.innerHTML = AVATARS.map(av => {
+        const isSelected = state.selectedAvatar === av;
+        return `
+          <button type="button" onclick="selectAvatar('${av}')"
+            class="w-10 h-10 rounded-xl text-xl flex items-center justify-center transition transform cursor-pointer ${
+              isSelected
+                ? 'bg-indigo-600 text-white scale-110 shadow-md ring-2 ring-indigo-300'
+                : 'bg-slate-100 hover:bg-slate-200'
+            }">
+            ${av}
+          </button>
+        `;
+      }).join('');
+
+      if (state.profile) {
+        document.getElementById('user-name-input').value = state.profile.name === 'Zukko O‘yinchi' ? '' : state.profile.name;
+      }
+    }
+
+    window.selectAgeGroup = function(ageId) {
+      sfx.click();
+      state.selectedAge = ageId;
+      document.getElementById('custom-age-input').value = '';
+      document.getElementById('age-notice').classList.add('hidden');
+      renderOnboarding();
+    };
+
+    window.selectAvatar = function(av) {
+      sfx.click();
+      state.selectedAvatar = av;
+      renderOnboarding();
+    };
+
+    document.getElementById('custom-age-input').addEventListener('input', (e) => {
+      const num = parseInt(e.target.value, 10);
+      const noticeEl = document.getElementById('age-notice');
+      if (!isNaN(num) && num > 0) {
+        if (num <= 5) {
+          state.selectedAge = '3-5';
+          noticeEl.textContent = 'ℹ️ 3–5 yosh (Kichkintoylar) toifasi tanlandi 🧸';
+        } else if (num <= 9) {
+          state.selectedAge = '5-9';
+          noticeEl.textContent = 'ℹ️ 5–9 yosh (Boshlang‘ich sinf) toifasi tanlandi 🚀';
+        } else if (num <= 15) {
+          state.selectedAge = '10-15';
+          noticeEl.textContent = 'ℹ️ 10–15 yosh (O‘smirlar) toifasi tanlandi 🧠';
+        } else {
+          state.selectedAge = '16-20';
+          noticeEl.textContent = num > 20
+            ? 'ℹ️ 20 yoshdan kattalar avtomatik ravishda 16–20+ (Yoshlar va kattalar) toifasiga yo‘naltirildi ⚡'
+            : 'ℹ️ 16–20+ yosh (Yoshlar va kattalar) toifasi tanlandi ⚡';
+        }
+        noticeEl.classList.remove('hidden');
+        renderOnboarding();
+      } else {
+        noticeEl.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('btn-over-20').addEventListener('click', () => {
+      sfx.click();
+      state.selectedAge = '16-20';
+      document.getElementById('custom-age-input').value = '21';
+      const noticeEl = document.getElementById('age-notice');
+      noticeEl.textContent = 'ℹ️ 20 yoshdan kattalar uchun 16–20+ (Ekspert) toifasi faollashtirildi ⚡';
+      noticeEl.classList.remove('hidden');
+      renderOnboarding();
+    });
+
+    document.getElementById('profile-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      sfx.correct();
+      const rawName = document.getElementById('user-name-input').value.trim();
+      state.profile = {
+        name: rawName || 'Zukko O‘yinchi',
+        avatar: state.selectedAvatar,
+        ageGroup: state.selectedAge
+      };
+      localStorage.setItem('zukkolab_profile', JSON.stringify(state.profile));
+      showMainApp();
+    });
+
+    function showOnboarding() {
+      clearActiveTimer();
+      document.getElementById('main-app').classList.add('hidden');
+      document.getElementById('onboarding-screen').classList.remove('hidden');
+      renderOnboarding();
+    }
+
+    function updateHeaderStats() {
+      if (!state.profile) return;
+      const ageObj = AGE_GROUPS.find(g => g.id === state.profile.ageGroup) || AGE_GROUPS[1];
+      const total = getTotalScore();
+
+      document.getElementById('header-avatar').textContent = state.profile.avatar;
+      document.getElementById('header-name').textContent = state.profile.name;
+      document.getElementById('header-age-label').textContent = `${ageObj.label} ${ageObj.emoji}`;
+      document.getElementById('header-total-score').textContent = total;
+      document.getElementById('banner-total-score').textContent = total;
+    }
+
+    function showMainApp() {
+      clearActiveTimer();
+      state.activeGame = null;
+      document.getElementById('onboarding-screen').classList.add('hidden');
+      document.getElementById('main-app').classList.remove('hidden');
+      document.getElementById('game-container').classList.add('hidden');
+      document.getElementById('dashboard-view').classList.remove('hidden');
+      document.getElementById('btn-nav-home').classList.add('hidden');
+
+      const ageObj = AGE_GROUPS.find(g => g.id === state.profile.ageGroup) || AGE_GROUPS[1];
+      const banner = document.getElementById('welcome-banner');
+      banner.className = `rounded-3xl bg-gradient-to-r ${ageObj.gradient} p-6 sm:p-8 text-white shadow-lg mb-8 relative overflow-hidden`;
+      document.getElementById('banner-age-badge').textContent = `${ageObj.emoji} ${ageObj.label} — ${ageObj.title}`;
+      document.getElementById('banner-greeting').textContent = `Salom, ${state.profile.name}! ${state.profile.avatar}`;
+
+      updateHeaderStats();
+      renderGamesGrid();
+    }
+
+    function renderGamesGrid() {
+      const grid = document.getElementById('games-grid');
+      grid.innerHTML = GAMES_LIST.map(game => {
+        const best = getBestScore(game.id);
+        return `
+          <div onclick="launchGame('${game.id}')"
+            class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-slate-100 hover:border-indigo-200 transition-all duration-300 cursor-pointer flex flex-col justify-between transform hover:-translate-y-1">
+            <div>
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} text-3xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition">
+                  ${game.emoji}
+                </div>
+                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
+                  ${game.skill}
+                </span>
+              </div>
+              <h2 class="text-xl font-black text-slate-800 mb-1.5 group-hover:text-indigo-600 transition">
+                ${game.title}
+              </h2>
+              <p class="text-sm text-slate-500 font-medium mb-6">
+                ${game.subtitle}
+              </p>
+            </div>
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+              <div class="flex items-center gap-1.5 text-sm font-extrabold text-amber-600">
+                🏅 <span>Rekord: ${best}</span>
+              </div>
+              <span class="inline-flex items-center gap-1 text-sm font-extrabold text-indigo-600 group-hover:translate-x-1 transition">
+                O‘ynash ➡️
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('btn-edit-profile').addEventListener('click', () => { sfx.click(); showOnboarding(); });
+    document.getElementById('btn-banner-change-age').addEventListener('click', () => { sfx.click(); showOnboarding(); });
+    document.getElementById('btn-logo-home').addEventListener('click', () => { sfx.click(); showMainApp(); });
+    document.getElementById('btn-nav-home').addEventListener('click', () => { sfx.click(); showMainApp(); });
+    document.getElementById('btn-toggle-sound').addEventListener('click', (e) => {
+      sfx.enabled = !sfx.enabled;
+      e.currentTarget.textContent = sfx.enabled ? '🔊' : '🔇';
+      if (sfx.enabled) sfx.click();
+    });
+
+    window.launchGame = function(gameId) {
+      sfx.click();
+      clearActiveTimer();
+      state.activeGame = gameId;
+      document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('game-container').classList.remove('hidden');
+      document.getElementById('btn-nav-home').classList.remove('hidden');
+
+      if (gameId === 'memory') startMemoryGame();
+      else if (gameId === 'math') startMathGame();
+      else if (gameId === 'pattern') startPatternGame();
+      else if (gameId === 'attention') startAttentionGame();
+      else if (gameId === 'riddles') startRiddlesGame();
+      else if (gameId === 'simon') startSimonGame();
+    };
+
+    // =======================================================================
+    // E. O'YIN 1: XOTIRA KARTOCHKALARI (MEMORY MATCH)
+    // =======================================================================
+    function startMemoryGame() {
+      const configs = {
+        '3-5': { pairs: 3, cols: 'grid-cols-3', emojis: ['🐶', '🐱', '🐰', '🦊', '🐻', '🐼'] },
+        '5-9': { pairs: 6, cols: 'grid-cols-3 sm:grid-cols-4', emojis: ['🚀', '🛸', '🌟', '🪐', '🌈', '🦄', '🦖', '🐬'] },
+        '10-15': { pairs: 8, cols: 'grid-cols-4', emojis: ['🧠', '⚡', '🎯', '🔬', '🧬', '🔭', '💎', '🏆', '🎨', '🎮'] },
+        '16-20': { pairs: 10, cols: 'grid-cols-4 sm:grid-cols-5', emojis: ['⚛️', '♟️', '🧩', '🔮', '🗝️', '🧭', '⏳', '⚖️', '💡', '🛡️', '🔥', '❄️'] }
+      };
+      const cfg = configs[state.profile.ageGroup] || configs['5-9'];
+      const selected = [...cfg.emojis].sort(() => Math.random() - 0.5).slice(0, cfg.pairs);
+      const cards = [...selected, ...selected].sort(() => Math.random() - 0.5);
+
+      let flipped = [];
+      let matched = new Set();
+      let moves = 0;
+      let seconds = 0;
+      let locked = false;
+
+      const container = document.getElementById('game-container');
+
+      function render() {
+        container.innerHTML = `
+          <div class="max-w-3xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
+              <button onclick="showMainApp()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer">⬅️ Orqaga</button>
+              <div class="flex items-center gap-4 sm:gap-6 font-bold">
+                <span>⏱️ <span id="mem-time">${seconds}</span>s</span>
+                <span>🎯 <span id="mem-moves">${moves}</span> yurish</span>
+                <span class="text-amber-600">🏆 Rekord: ${getBestScore('memory')}</span>
+              </div>
+              <button onclick="launchGame('memory')" class="px-3 py-2 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 font-semibold cursor-pointer">🔄 Qayta</button>
+            </div>
+            <div id="mem-grid" class="grid ${cfg.cols} gap-3 sm:gap-4">
+              ${cards.map((emoji, idx) => {
+                const isOpen = flipped.includes(idx) || matched.has(emoji);
+                const isDone = matched.has(emoji);
+                return `
+                  <button onclick="flipMemoryCard(${idx})"
+                    class="aspect-square rounded-2xl sm:rounded-3xl text-4xl sm:text-5xl flex items-center justify-center font-bold transition-all duration-200 shadow-sm cursor-pointer ${
+                      isOpen
+                        ? (isDone ? 'bg-emerald-100 border-2 border-emerald-400 scale-95' : 'bg-white border-2 border-violet-400')
+                        : 'bg-gradient-to-br from-violet-500 to-indigo-600 text-white hover:scale-[1.03]'
+                    }">
+                    ${isOpen ? emoji : '❓'}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      window.flipMemoryCard = function(idx) {
+        if (locked || flipped.includes(idx) || matched.has(cards[idx])) return;
+        sfx.click();
+        flipped.push(idx);
+        render();
+
+        if (flipped.length === 2) {
+          moves++;
+          locked = true;
+          const [i1, i2] = flipped;
+          if (cards[i1] === cards[i2]) {
+            sfx.correct();
+            matched.add(cards[i1]);
+            flipped = [];
+            locked = false;
+            render();
+
+            if (matched.size === cfg.pairs) {
+              clearActiveTimer();
+              const finalScore = Math.max(100, (cfg.pairs * 150) - (moves * 10) - (seconds * 2));
+              saveScore('memory', finalScore);
+              sfx.win();
+              container.innerHTML = `
+                <div class="max-w-2xl mx-auto bg-white rounded-3xl p-8 text-center shadow-lg border-2 border-violet-200 animate-fade-in">
+                  <div class="text-6xl mb-4">🎉🏆🎉</div>
+                  <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Barakalla! Barcha juftliklar topildi!</h2>
+                  <p class="text-slate-600 mb-6">Siz ${seconds} soniya va ${moves} ta yurishda o‘yinni yakunladingiz.</p>
+                  <div class="inline-block bg-amber-100 text-amber-800 px-6 py-3 rounded-2xl text-2xl font-black mb-8">⭐ +${finalScore} ball</div>
+                  <div class="flex justify-center gap-4">
+                    <button onclick="launchGame('memory')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold shadow-md cursor-pointer">Yana o‘ynash</button>
+                    <button onclick="showMainApp()" class="px-6 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold cursor-pointer">Bosh menyuga</button>
+                  </div>
+                </div>
+              `;
+            }
+          } else {
+            setTimeout(() => {
+              flipped = [];
+              locked = false;
+              render();
+            }, 700);
+          }
+        }
+      };
+
+      render();
+      state.activeTimer = setInterval(() => {
+        seconds++;
+        const el = document.getElementById('mem-time');
+        if (el) el.textContent = seconds;
+      }, 1000);
+    }
+
+    // =======================================================================
+    // F. O'YIN 2: TEZKOR MATEMATIKA (MATH CHALLENGE)
+    // =======================================================================
+    function startMathGame() {
+      const age = state.profile.ageGroup;
+      let timeLeft = 60;
+      let score = 0;
+      let streak = 0;
+      let currentQ = null;
+      let locked = false;
+
+      const container = document.getElementById('game-container');
+
+      function nextQuestion() {
+        let qText = '', visual = '', ans = 0;
+        if (age === '3-5') {
+          const items = ['🍎', '🍌', '🍓', '🧸', '⭐', '🚗'];
+          const item = items[Math.floor(Math.random() * items.length)];
+          const a = Math.floor(Math.random() * 4) + 1;
+          const b = Math.floor(Math.random() * 4) + 1;
+          ans = a + b;
+          visual = `${item.repeat(a)}  ➕  ${item.repeat(b)}`;
+          qText = `${a} + ${b} = ?`;
+        } else if (age === '5-9') {
+          if (Math.random() > 0.4) {
+            const a = Math.floor(Math.random() * 18) + 2;
+            const b = Math.floor(Math.random() * 15) + 1;
+            ans = a + b;
+            qText = `${a} + ${b} = ?`;
+          } else {
+            const a = Math.floor(Math.random() * 20) + 10;
+            const b = Math.floor(Math.random() * 9) + 1;
+            ans = a - b;
+            qText = `${a} − ${b} = ?`;
+          }
+        } else if (age === '10-15') {
+          const t = Math.floor(Math.random() * 3);
+          if (t === 0) {
+            const a = Math.floor(Math.random() * 11) + 3;
+            const b = Math.floor(Math.random() * 11) + 3;
+            ans = a * b;
+            qText = `${a} × ${b} = ?`;
+          } else if (t === 1) {
+            const b = Math.floor(Math.random() * 9) + 3;
+            ans = Math.floor(Math.random() * 11) + 2;
+            qText = `${b * ans} ÷ ${b} = ?`;
+          } else {
+            const a = Math.floor(Math.random() * 8) + 2;
+            const b = Math.floor(Math.random() * 7) + 2;
+            const c = Math.floor(Math.random() * 15) + 5;
+            ans = a * b + c;
+            qText = `(${a} × ${b}) + ${c} = ?`;
+          }
+        } else {
+          const t = Math.floor(Math.random() * 2);
+          if (t === 0) {
+            const x = Math.floor(Math.random() * 12) + 2;
+            const a = Math.floor(Math.random() * 6) + 2;
+            const b = Math.floor(Math.random() * 20) + 1;
+            ans = x;
+            qText = `${a}x + ${b} = ${a * x + b}  👉  x = ?`;
+          } else {
+            const a = Math.floor(Math.random() * 14) + 6;
+            const b = Math.floor(Math.random() * 12) + 4;
+            const c = Math.floor(Math.random() * 25) + 10;
+            ans = a * b - c;
+            qText = `${a} × ${b} − ${c} = ?`;
+          }
+        }
+
+        const opts = new Set([ans]);
+        while (opts.size < 4) {
+          const offset = Math.floor(Math.random() * 9) - 4;
+          const cand = ans + (offset === 0 ? 5 : offset);
+          if (cand >= 0) opts.add(cand);
+        }
+        currentQ = { qText, visual, ans, options: Array.from(opts).sort(() => Math.random() - 0.5) };
+        locked = false;
+        render();
+      }
+
+      function render(feedback = '') {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
+              <button onclick="showMainApp()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer">⬅️ Orqaga</button>
+              <div class="flex items-center gap-5 font-extrabold">
+                <span id="math-time" class="${timeLeft <= 10 ? 'text-rose-600' : 'text-slate-700'}">⏱️ ${timeLeft}s</span>
+                <span class="text-emerald-600">⭐ ${score}</span>
+                ${streak > 1 ? `<span class="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-sm">🔥 ${streak}x</span>` : ''}
+              </div>
+              <button onclick="launchGame('math')" class="px-3 py-2 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold cursor-pointer">🔄 Qayta</button>
+            </div>
+            <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-md border-2 transition-colors ${
+              feedback === 'correct' ? 'border-emerald-400 bg-emerald-50/30' :
+              feedback === 'wrong' ? 'border-rose-400 bg-rose-50/30' : 'border-slate-100'
+            }">
+              <div class="text-center mb-8">
+                <span class="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase mb-4">To‘g‘ri javobni tanlang</span>
+                ${currentQ.visual ? `<div class="text-3xl sm:text-4xl mb-4 tracking-widest bg-slate-50 py-4 px-3 rounded-2xl">${currentQ.visual}</div>` : ''}
+                <div class="text-3xl sm:text-5xl font-black text-slate-800">${currentQ.qText}</div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                ${currentQ.options.map(opt => `
+                  <button onclick="answerMath(${opt})"
+                    class="py-5 px-4 rounded-2xl bg-slate-50 hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-400 text-2xl sm:text-3xl font-extrabold text-slate-800 transition transform active:scale-95 shadow-sm cursor-pointer">
+                    ${opt}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      window.answerMath = function(val) {
+        if (locked) return;
+        locked = true;
+        if (val === currentQ.ans) {
+          sfx.correct();
+          score += 20 + Math.min(streak * 5, 25);
+          streak++;
+          render('correct');
+        } else {
+          sfx.wrong();
+          streak = 0;
+          render('wrong');
+        }
+        setTimeout(nextQuestion, 400);
+      };
+
+      nextQuestion();
+      state.activeTimer = setInterval(() => {
+        timeLeft--;
+        const el = document.getElementById('math-time');
+        if (el) el.textContent = `⏱️ ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearActiveTimer();
+          saveScore('math', score);
+          sfx.win();
+          container.innerHTML = `
+            <div class="max-w-2xl mx-auto bg-white rounded-3xl p-8 text-center shadow-lg border-2 border-blue-200 animate-fade-in">
+              <div class="text-6xl mb-4">⏱️🎯</div>
+              <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Vaqt tugadi!</h2>
+              <p class="text-slate-600 mb-6">Ajoyib hisoblash tezligi! Sizning natijangiz:</p>
+              <div class="inline-block bg-blue-100 text-blue-800 px-6 py-3 rounded-2xl text-3xl font-black mb-8">${score} ball</div>
+              <div class="flex justify-center gap-4">
+                <button onclick="launchGame('math')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold shadow-md cursor-pointer">Qayta o‘ynash</button>
+                <button onclick="showMainApp()" class="px-6 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold cursor-pointer">Bosh menyuga</button>
+              </div>
+            </div>
+          `;
+        }
+      }, 1000);
+    }
+
+    // =======================================================================
+    // G. O'YIN 3: KETMA-KETLIKNI TOP (PATTERN & SEQUENCE)
+    // =======================================================================
+    function startPatternGame() {
+      const age = state.profile.ageGroup;
+      let round = 1;
+      const totalRounds = 8;
+      let score = 0;
+      let puzzle = null;
+      let chosen = null;
+
+      const container = document.getElementById('game-container');
+
+      function makePuzzle() {
+        chosen = null;
+        if (age === '3-5') {
+          const list = [
+            { seq: ['🔴', '🔵', '🔴', '🔵', '?'], ans: '🔴', opts: ['🔴', '🔵', '🟢', '🟡'], hint: 'Qizil va ko‘k navbatma-navbat kelmoqda' },
+            { seq: ['🍎', '🍌', '🍎', '🍌', '?'], ans: '🍎', opts: ['🍎', '🍌', '🍇', '🍊'], hint: 'Olma va banan takrorlanmoqda' },
+            { seq: ['⭐', '⭐', '🌙', '⭐', '⭐', '?'], ans: '🌙', opts: ['🌙', '⭐', '☀️', '☁️'], hint: 'Ikkita yulduzdan keyin oy keladi' },
+            { seq: ['🐶', '🐱', '🐭', '🐶', '🐱', '?'], ans: '🐭', opts: ['🐭', '🐶', '🐱', '🐰'], hint: 'Kuchuk, mushuk va sichqoncha ketma-ketligi' }
+          ];
+          puzzle = list[Math.floor(Math.random() * list.length)];
+        } else if (age === '5-9') {
+          const step = [2, 3, 5, 10][Math.floor(Math.random() * 4)];
+          const start = Math.floor(Math.random() * 10) + 1;
+          const ans = start + step * 4;
+          puzzle = {
+            seq: [start, start + step, start + step * 2, start + step * 3, '?'],
+            ans,
+            opts: Array.from(new Set([ans, ans + step, ans - 1, ans + 2])).sort(() => Math.random() - 0.5),
+            hint: `Har bir keyingi son +${step} ga ortib bormoqda`
+          };
+        } else if (age === '10-15') {
+          const start = Math.floor(Math.random() * 3) + 2;
+          const ans = start * 16;
+          puzzle = {
+            seq: [start, start * 2, start * 4, start * 8, '?'],
+            ans,
+            opts: [ans, ans + 4, start * 12, ans - 2].sort(() => Math.random() - 0.5),
+            hint: 'Har bir son 2 baravar ko‘paymoqda'
+          };
+        } else {
+          const a = Math.floor(Math.random() * 4) + 1;
+          const b = Math.floor(Math.random() * 5) + 2;
+          const c = a + b, d = b + c, e = c + d, ans = d + e;
+          puzzle = {
+            seq: [a, b, c, d, e, '?'],
+            ans,
+            opts: [ans, ans + 2, ans - 3, e + 5].sort(() => Math.random() - 0.5),
+            hint: 'Fibonachchi qoidasi: har bir had oldingi ikkita had yig‘indisiga teng'
+          };
+        }
+        render();
+      }
+
+      function render() {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
+              <button onclick="showMainApp()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer">⬅️ Orqaga</button>
+              <div class="flex items-center gap-5 font-bold">
+                <span>Bosqich: ${round}/${totalRounds}</span>
+                <span class="text-amber-600">⭐ ${score}</span>
+              </div>
+              <button onclick="launchGame('pattern')" class="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold cursor-pointer">🔄 Qayta</button>
+            </div>
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-100">
+              <p class="text-center text-slate-500 font-semibold mb-6">So‘roq belgisi (?) o‘rniga mos keluvchi elementni toping:</p>
+              <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
+                ${puzzle.seq.map(item => `
+                  <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black shadow-sm ${
+                    item === '?'
+                      ? 'bg-amber-100 border-2 border-dashed border-amber-500 text-amber-600 animate-pulse'
+                      : 'bg-slate-100 text-slate-800 border border-slate-200'
+                  }">
+                    ${item === '?' && chosen !== null ? puzzle.ans : item}
+                  </div>
+                `).join('')}
+              </div>
+              ${chosen !== null ? `
+                <div class="mb-6 p-3 rounded-xl text-center text-sm font-semibold ${chosen === puzzle.ans ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
+                  ${chosen === puzzle.ans ? '✅ To‘g‘ri! ' : '❌ Xato! '} ${puzzle.hint}
+                </div>
+              ` : ''}
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                ${puzzle.opts.map(opt => {
+                  let cls = 'bg-slate-50 hover:bg-amber-50 border-slate-200 hover:border-amber-400 text-slate-800';
+                  if (chosen !== null) {
+                    if (opt === puzzle.ans) cls = 'bg-emerald-500 border-emerald-600 text-white';
+                    else if (opt === chosen) cls = 'bg-rose-500 border-rose-600 text-white';
+                  }
+                  const arg = typeof opt === 'string' ? `'${opt}'` : opt;
+                  return `<button onclick="pickPattern(${arg})" class="py-4 rounded-2xl border-2 text-2xl sm:text-3xl font-extrabold transition cursor-pointer ${cls}">${opt}</button>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      window.pickPattern = function(opt) {
+        if (chosen !== null) return;
+        chosen = opt;
+        if (opt === puzzle.ans) {
+          sfx.correct();
+          score += 125;
+        } else {
+          sfx.wrong();
+        }
+        render();
+
+        setTimeout(() => {
+          if (round >= totalRounds) {
+            saveScore('pattern', score);
+            sfx.win();
+            container.innerHTML = `
+              <div class="max-w-2xl mx-auto bg-white rounded-3xl p-8 text-center shadow-lg border-2 border-amber-200 animate-fade-in">
+                <div class="text-6xl mb-4">🧩✨</div>
+                <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Mantiqiy qatorlar yakunlandi!</h2>
+                <div class="inline-block bg-amber-100 text-amber-800 px-6 py-3 rounded-2xl text-3xl font-black my-6">${score} ball</div>
+                <div class="flex justify-center gap-4">
+                  <button onclick="launchGame('pattern')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-md cursor-pointer">Yana o‘ynash</button>
+                  <button onclick="showMainApp()" class="px-6 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold cursor-pointer">Bosh menyuga</button>
+                </div>
+              </div>
+            `;
+          } else {
+            round++;
+            makePuzzle();
+          }
+        }, 1000);
+      };
+
+      makePuzzle();
+    }
+
+    // =======================================================================
+    // H. O'YIN 4: DIQQAT VA STROOP TESTI (ATTENTION & FOCUS)
+    // =======================================================================
+    function startAttentionGame() {
+      const age = state.profile.ageGroup;
+      const isStroop = age === '10-15' || age === '16-20';
+      let timeLeft = 45;
+      let score = 0;
+      let level = 1;
+      let challenge = null;
+
+      const container = document.getElementById('game-container');
+
+      function nextChallenge() {
+        if (!isStroop) {
+          const pairs = [['😀', '😃'], ['🍎', '🍅'], ['🐶', '🦊'], ['⚽', '🏀'], ['🌞', '🌝'], ['🍀', '☘️'], ['🚗', '🚕'], ['🦆', '🐤']];
+          const pair = pairs[Math.floor(Math.random() * pairs.length)];
+          const gridSize = level <= 2 ? 9 : level <= 5 ? 16 : 25;
+          const cols = gridSize === 9 ? 'grid-cols-3' : gridSize === 16 ? 'grid-cols-4' : 'grid-cols-5';
+          const oddIdx = Math.floor(Math.random() * gridSize);
+          const items = Array.from({ length: gridSize }, (_, i) => (i === oddIdx ? pair[1] : pair[0]));
+          challenge = { type: 'odd', items, oddIdx, cols };
+        } else {
+          const colors = [
+            { name: 'QIZIL', hex: 'text-rose-600' },
+            { name: 'KO‘K', hex: 'text-blue-600' },
+            { name: 'YASHIL', hex: 'text-emerald-600' },
+            { name: 'SARIQ', hex: 'text-amber-500' },
+            { name: 'BINAFSHA', hex: 'text-purple-600' }
+          ];
+          const wordObj = colors[Math.floor(Math.random() * colors.length)];
+          let inkObj = colors[Math.floor(Math.random() * colors.length)];
+          while (inkObj.name === wordObj.name) inkObj = colors[Math.floor(Math.random() * colors.length)];
+          const askInk = Math.random() > 0.35;
+          challenge = {
+            type: 'stroop',
+            wordText: wordObj.name,
+            inkClass: inkObj.hex,
+            askInk,
+            correctName: askInk ? inkObj.name : wordObj.name,
+            options: colors
+          };
+        }
+        render();
+      }
+
+      function render() {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
+              <button onclick="showMainApp()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer">⬅️ Orqaga</button>
+              <div class="flex items-center gap-5 font-bold">
+                <span id="att-time" class="${timeLeft <= 10 ? 'text-rose-600' : 'text-slate-700'}">⏱️ ${timeLeft}s</span>
+                <span class="text-emerald-600">⭐ ${score}</span>
+              </div>
+              <button onclick="launchGame('attention')" class="px-3 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold cursor-pointer">🔄 Qayta</button>
+            </div>
+            ${challenge.type === 'odd' ? `
+              <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 text-center">
+                <h3 class="text-xl font-extrabold text-slate-800 mb-1">Boshqalaridan farqli belgini toping!</h3>
+                <p class="text-sm text-slate-500 mb-5">Xato bosish −3 soniya oladi</p>
+                <div class="grid ${challenge.cols} gap-2 sm:gap-3 max-w-md mx-auto">
+                  ${challenge.items.map((em, idx) => `
+                    <button onclick="clickOdd(${idx})" class="aspect-square rounded-2xl bg-slate-50 hover:bg-rose-50 border border-slate-200 text-3xl sm:text-4xl flex items-center justify-center transition transform active:scale-90 cursor-pointer">${em}</button>
+                  `).join('')}
+                </div>
+              </div>
+            ` : `
+              <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-md border border-slate-100 text-center">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-rose-100 text-rose-800 font-extrabold text-sm mb-6">
+                  ${challenge.askInk ? '🎨 SO‘ZNING RANGINI (SIYOHINI) TANLANG!' : '📖 YOZILGAN SO‘ZNING MA’NOSINI TANLANG!'}
+                </div>
+                <div class="text-5xl sm:text-7xl font-black tracking-wider my-8 select-none ${challenge.inkClass}">${challenge.wordText}</div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6">
+                  ${challenge.options.map(c => `
+                    <button onclick="clickStroop('${c.name}')" class="py-4 px-3 rounded-2xl bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 font-extrabold text-slate-800 text-lg transition cursor-pointer">${c.name}</button>
+                  `).join('')}
+                </div>
+              </div>
+            `}
+          </div>
+        `;
+      }
+
+      window.clickOdd = function(idx) {
+        if (idx === challenge.oddIdx) {
+          sfx.correct();
+          level++;
+          score += 30;
+          nextChallenge();
+        } else {
+          sfx.wrong();
+          timeLeft = Math.max(1, timeLeft - 3);
+        }
+      };
+
+      window.clickStroop = function(name) {
+        if (name === challenge.correctName) {
+          sfx.correct();
+          score += 35;
+          nextChallenge();
+        } else {
+          sfx.wrong();
+          timeLeft = Math.max(1, timeLeft - 3);
+          nextChallenge();
+        }
+      };
+
+      nextChallenge();
+      state.activeTimer = setInterval(() => {
+        timeLeft--;
+        const el = document.getElementById('att-time');
+        if (el) el.textContent = `⏱️ ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearActiveTimer();
+          saveScore('attention', score);
+          sfx.win();
+          container.innerHTML = `
+            <div class="max-w-2xl mx-auto bg-white rounded-3xl p-8 text-center shadow-lg border-2 border-rose-200 animate-fade-in">
+              <div class="text-6xl mb-4">👁️⚡</div>
+              <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Diqqat sinovi yakunlandi!</h2>
+              <div class="inline-block bg-rose-100 text-rose-800 px-6 py-3 rounded-2xl text-3xl font-black my-6">${score} ball</div>
+              <div class="flex justify-center gap-4">
+                <button onclick="launchGame('attention')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold shadow-md cursor-pointer">Qayta urinish</button>
+                <button onclick="showMainApp()" class="px-6 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold cursor-pointer">Bosh menyuga</button>
+              </div>
+            </div>
+          `;
+        }
+      }, 1000);
+    }
+
+    // =======================================================================
+    // I. O'YIN 5: MANTIQIY TOPISHMOQLAR (LOGIC RIDDLES)
+    // =======================================================================
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function startRiddlesGame() {
+      const ageKey = (state.profile && state.profile.ageGroup) || '5-9';
+      const sourceQuestions = RIDDLES_DB[ageKey] || RIDDLES_DB['5-9'];
+
+      // Har safar savollar tartibini va har bir savoldagi variantlar tartibini yangilaymiz
+      const questions = shuffleArray(sourceQuestions).map((item) => ({
+        q: item.q,
+        answer: item.answer,
+        explanation: item.explanation,
+        options: shuffleArray(item.options)
+      }));
+
+      let index = 0;
+      let score = 0;
+      let chosenIndex = null;
+
+      const container = document.getElementById('game-container');
+      container.innerHTML = `
+        <div id="riddles-root" class="max-w-2xl mx-auto"></div>
+      `;
+      const root = document.getElementById('riddles-root');
+
+      function render() {
+        const cur = questions[index];
+        const isAnswered = chosenIndex !== null;
+        const chosenText = isAnswered ? cur.options[chosenIndex] : null;
+        const isCorrect = isAnswered && chosenText === cur.answer;
+
+        root.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
+            <button type="button" id="riddle-back-btn" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer">⬅️ Orqaga</button>
+            <div class="flex items-center gap-5 font-bold">
+              <span>Savol: ${index + 1}/${questions.length}</span>
+              <span class="text-emerald-600">⭐ ${score}</span>
+            </div>
+            <button type="button" id="riddle-restart-btn" class="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold cursor-pointer">🔄 Qayta</button>
+          </div>
+          <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-100 animate-fade-in">
+            <div class="flex items-start gap-3 mb-6">
+              <div class="p-3 rounded-2xl bg-emerald-100 text-emerald-600 text-2xl shrink-0">💡</div>
+              <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 leading-snug">${cur.q}</h3>
+            </div>
+            <div id="riddle-options" class="space-y-3">
+              ${cur.options.map((opt, idx) => {
+                let cls = 'bg-slate-50 hover:bg-emerald-50 border-slate-200 hover:border-emerald-400 text-slate-800';
+                if (isAnswered) {
+                  if (opt === cur.answer) cls = 'bg-emerald-500 border-emerald-600 text-white';
+                  else if (idx === chosenIndex) cls = 'bg-rose-500 border-rose-600 text-white';
+                  else cls = 'bg-slate-50 border-slate-200 text-slate-400 opacity-70';
+                }
+                return `
+                  <button type="button" data-opt-idx="${idx}" ${isAnswered ? 'disabled' : ''} class="riddle-opt-btn w-full text-left p-4 rounded-2xl border-2 font-bold text-base sm:text-lg transition flex items-center justify-between cursor-pointer ${cls}">
+                    <span>${opt}</span>
+                    ${isAnswered && opt === cur.answer ? '<span>✅</span>' : ''}
+                    ${isAnswered && idx === chosenIndex && opt !== cur.answer ? '<span>❌</span>' : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+            ${isAnswered ? `
+              <div class="mt-6 p-4 rounded-2xl border animate-fade-in ${
+                isCorrect ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-sky-50 border-sky-200 text-sky-900'
+              }">
+                <p class="font-bold text-sm uppercase mb-1 ${isCorrect ? 'text-emerald-700' : 'text-sky-600'}">
+                  ${isCorrect ? '✅ To‘g‘ri javob! Izoh:' : '💡 Izoh:'}
+                </p>
+                <p class="font-medium">${cur.explanation}</p>
+                <button type="button" id="riddle-next-btn" class="mt-4 w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold cursor-pointer">
+                  ${index + 1 >= questions.length ? 'Natijani ko‘rish 🏆' : 'Keyingi topishmoq ➡️'}
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+        document.getElementById('riddle-back-btn').addEventListener('click', () => {
+          sfx.click();
+          showMainApp();
+        });
+
+        document.getElementById('riddle-restart-btn').addEventListener('click', () => {
+          sfx.click();
+          startRiddlesGame();
+        });
+
+        root.querySelectorAll('.riddle-opt-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            if (chosenIndex !== null) return;
+            const optIdx = Number(btn.getAttribute('data-opt-idx'));
+            chosenIndex = optIdx;
+            if (cur.options[optIdx] === cur.answer) {
+              sfx.correct();
+              score += 125;
+            } else {
+              sfx.wrong();
+            }
+            render();
+          });
+        });
+
+        const nextBtn = document.getElementById('riddle-next-btn');
+        if (nextBtn) {
+          nextBtn.addEventListener('click', () => {
+            sfx.click();
+            if (index + 1 >= questions.length) {
+              saveScore('riddles', score);
+              sfx.win();
+              root.innerHTML = `
+                <div class="bg-white rounded-3xl p-8 text-center shadow-lg border-2 border-emerald-200 animate-fade-in">
+                  <div class="text-6xl mb-4">💡🎓</div>
+                  <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Barcha topishmoqlar yechildi!</h2>
+                  <div class="inline-block bg-emerald-100 text-emerald-800 px-6 py-3 rounded-2xl text-3xl font-black my-6">${score} ball</div>
+                  <div class="flex justify-center gap-4">
+                    <button type="button" id="riddle-again-btn" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold shadow-md cursor-pointer">Yana ishlash</button>
+                    <button type="button" id="riddle-home-btn" class="px-6 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold cursor-pointer">Bosh menyuga</button>
+                  </div>
+                </div>
+              `;
+              document.getElementById('riddle-again-btn').addEventListener('click', () => {
+                sfx.click();
+                startRiddlesGame();
+              });
+              document.getElementById('riddle-home-btn').addEventListener('click', () => {
+                sfx.click();
+                showMainApp();
+              });
+            } else {
+              index += 1;
+              chosenIndex = null;
+              render();
+            }
+          });
+        }
+      }
+
+      render();
+    }
+
+    // =======================================================================
+    // J. O'YIN 6: ESLAB QOL VA TAKRORLA (SIMON GRID MEMORY)
+    // =======================================================================
+    function startSimonGame() {
+      const age = state.profile.ageGroup;
+      const gridSize = age === '3-5' ? 4 : age === '5-9' ? 6 : 9;
+      const colsClass = gridSize === 4 ? 'grid-cols-2' : 'grid-cols-3';
+      const speedMs = age === '3-5' ? 750 : age === '5-9' ? 600 : 450;
+      const padColors = ['bg-rose-400', 'bg-sky-400', 'bg-amber-400', 'bg-emerald-400', 'bg-purple-400', 'bg-pink-400', 'bg-cyan-400', 'bg-orange-400', 'bg-indigo-400'];
+
+      let sequence = [];
+      let userStep = 0;
+      let activePad = null;
+      let status = 'idle'; // 'idle' | 'watching' | 'input' | 'gameover'
+      let score = 0;
+
+      const container = document.getElementById('game-container');
+
+      function playSeq() {
+        status = 'watching';
+        render();
+        sequence.forEach((padIdx, i) => {
+          setTimeout(() => {
+            if (state.activeGame !== 'simon') return;
+            activePad = padIdx;
+            sfx.simonNote(padIdx);
+            render();
+            setTimeout(() => {
+              activePad = null;
+              render();
+            }, speedMs * 0.55);
+          }, (i + 1) * speedMs);
+        });
+
+        setTimeout(() => {
+          if (state.activeGame !== 'simon') return;
+          status = 'input';
+          userStep = 0;
+          render();
+        }, (sequence.length + 1) * speedMs);
+      }
+
+      window.beginSimonSequence = function() {
+        sfx.click();
+        sequence = [Math.floor(Math.random() * gridSize)];
+        score = 0;
+        playSeq();
+      };
+
+      window.pressSimonPad = function(idx) {
+        if (status !== 'input') return;
+        activePad = idx;
+        sfx.simonNote(idx);
+        render();
+        setTimeout(() => { activePad = null; render(); }, 180);
+
+        if (idx === sequence[userStep]) {
+          userStep++;
+          if (userStep === sequence.length) {
+            score += sequence.length * 50;
+            sequence.push(Math.floor(Math.random() * gridSize));
+            status = 'watching';
+            setTimeout(playSeq, 600);
+          } else {
+            render();
+          }
+        } else {
+          sfx.wrong();
+          status = 'gameover';
+          saveScore('simon', score);
+          render();
+        }
+      };
+
+      function render() {
+        container.innerHTML = `
+          <div class="max-w-xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
+              <button onclick="showMainApp()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer">⬅️ Orqaga</button>
+              <div class="flex items-center gap-5 font-bold">
+                <span>Uzunlik: ${sequence.length}</span>
+                <span class="text-fuchsia-600">⭐ ${score}</span>
+              </div>
+              <button onclick="beginSimonSequence()" class="px-3 py-2 rounded-xl bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-700 font-semibold cursor-pointer">🔄 Qayta</button>
+            </div>
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-100 text-center">
+              ${status === 'idle' ? `
+                <div class="py-6">
+                  <div class="text-5xl mb-3">✨🧠</div>
+                  <h3 class="text-2xl font-extrabold text-slate-800 mb-2">Yongan katakchalarni eslab qoling</h3>
+                  <p class="text-slate-500 mb-6">Ketma-ketlikni diqqat bilan kuzating va xuddi shu tartibda bosing.</p>
+                  <button onclick="beginSimonSequence()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-indigo-600 text-white font-extrabold text-lg shadow-lg cursor-pointer">Boshlash 🚀</button>
+                </div>
+              ` : status === 'gameover' ? `
+                <div class="py-6">
+                  <div class="text-5xl mb-3">💥🎯</div>
+                  <h3 class="text-2xl font-extrabold text-slate-800 mb-2">Noto‘g‘ri ketma-ketlik!</h3>
+                  <p class="text-slate-600 mb-4">Siz ${sequence.length - 1} ta bosqichni muvaffaqiyatli eslab qoldingiz.</p>
+                  <div class="inline-block bg-fuchsia-100 text-fuchsia-800 px-6 py-2.5 rounded-2xl text-2xl font-black mb-6">${score} ball</div>
+                  <div><button onclick="beginSimonSequence()" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-indigo-600 text-white font-bold shadow-md cursor-pointer">Qayta o‘ynash</button></div>
+                </div>
+              ` : `
+                <div class="mb-6">
+                  <span class="inline-block px-4 py-1.5 rounded-full text-sm font-extrabold ${
+                    status === 'watching' ? 'bg-amber-100 text-amber-800 animate-pulse' : 'bg-emerald-100 text-emerald-800'
+                  }">
+                    ${status === 'watching' ? '👀 Diqqat bilan kuzating...' : `👆 Sizning navbatingiz (${userStep}/${sequence.length})`}
+                  </span>
+                </div>
+                <div class="grid ${colsClass} gap-3 sm:gap-4 max-w-sm mx-auto">
+                  ${Array.from({ length: gridSize }).map((_, idx) => `
+                    <button onclick="pressSimonPad(${idx})" ${status !== 'input' ? 'disabled' : ''}
+                      class="aspect-square rounded-2xl sm:rounded-3xl transition-all duration-150 transform shadow-md cursor-pointer ${padColors[idx % padColors.length]} ${
+                        activePad === idx ? 'scale-105 brightness-125 ring-4 ring-slate-800/30' : 'opacity-75 hover:opacity-95 active:scale-95'
+                      }">
+                    </button>
+                  `).join('')}
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }
+
+      render();
+    }
+
+    // -----------------------------------------------------------------------
+    // K. ILOVANI ISHGA TUSHIRISH
+    // -----------------------------------------------------------------------
+    if (state.profile) {
+      showMainApp();
+    } else {
+      showOnboarding();
+    }
+  </script>
+</body>
+</html>
